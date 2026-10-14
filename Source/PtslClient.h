@@ -39,5 +39,5 @@ private:
     bool connect (juce::String& error);
 
     juce::String sessionId;
-    int version = 0, versionMinor = 0, versionRevision = 0;
+    int version = 1, versionMinor = 0, versionRevision = 0; // Pro Tools refuses version 0, even to ask its version
 };

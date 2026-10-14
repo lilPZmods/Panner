@@ -18,7 +18,7 @@ Once pushed, Panner reads those lanes back every couple of seconds and right aft
 
 The prompt gets its own always-on-top window when the plugin is closed. It also fires if you run an offline bounce while Panner can't confirm the lanes match.
 
-The bridge uses Pro Tools' scripting API (PTSL, Pro Tools 2026.4 or later) over a small built-in client, with no gRPC dependency. It has been tested against a simulated PTSL server, **not yet against a live Pro Tools session**.
+The bridge uses Pro Tools' scripting API (PTSL) through a small built-in client, with no gRPC dependency. **Current blocker:** in Pro Tools 2026.4 the commands that write and read pan automation belong to Avid's *private* API. Pro Tools refuses them ("Private API has not been enabled in this session") unless the client presents a key issued by Avid. Everything else has been tested against a simulated PTSL server, and the connection and registration work against a real Pro Tools 2026.4.
 
 ### Also in the box
 
