@@ -38,7 +38,10 @@ juce_add_plugin(Panner
 
 target_sources(Panner PRIVATE
     Source/PluginProcessor.cpp
-    Source/PluginEditor.cpp)
+    Source/PluginEditor.cpp
+    Source/ProToolsBridge.cpp
+    Source/PtslClient.cpp
+    Source/DriftPrompt.cpp)
 
 target_compile_definitions(Panner PUBLIC
     JUCE_WEB_BROWSER=0

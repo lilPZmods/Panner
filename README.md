@@ -6,22 +6,25 @@ Panner is a sequenced, tempo-synced Atmos panner (AAX / VST3 / AU) built to clos
 
 ## Status: early prototype
 
-What works today:
+Panner **bridges to Pro Tools' native object panner**. The pattern lives in the plugin while you work. **Push to Pro Tools** writes it, over your timeline selection, into the track's native X / Y / Z / Size pan automation. The track then plays and bounces as a real Atmos object through Pro Tools' own renderer, with no real-time pass.
 
-- Mono or stereo in, out to stereo, 5.1, 7.1, 5.1.2, 5.1.4, 7.1.2, 7.1.4, 7.1.6 or 9.1.6 (bed panning, constant power).
-- Room-style X / Y / Z positioning with Size, Stereo Width and Gain.
-- Up to 16 steps, each with its own position, at tempo-synced rates (straight, triplet, dotted) with Glide between steps.
-- The sequence is computed from the host timeline, so offline bounces land on the same positions as realtime playback.
+### No silent drift
 
-Not yet tested inside a DAW.
+Once pushed, Panner reads those lanes back every couple of seconds and right after any change to Panner itself. If the lanes and the plugin ever disagree, from either side, it throws a flashing full-window prompt with no close button. You can't dismiss it until you choose:
 
-## Where it's going: bridging to the native panner
+- **Panner wins:** push again.
+- **Undo Panner changes:** go back to what was last pushed.
+- **Pro Tools wins:** unlink, so the lanes become the master.
 
-The pattern lives in the plugin while you work. When it's time to print, one button writes it to the track's **native** pan automation lanes (X / Y / Z / Size) as a real Atmos object, rendered by the DAW's own renderer.
+The prompt gets its own always-on-top window when the plugin is closed. It also fires if you run an offline bounce while Panner can't confirm the lanes match.
 
-Panner then keeps checking that the plugin and the DAW lanes still agree. If they ever differ, it throws a blocking prompt you can't dismiss until you choose which side wins. No silent drift.
+The bridge uses Pro Tools' scripting API (PTSL, Pro Tools 2026.4 or later) over a small built-in client, with no gRPC dependency. It has been tested against a simulated PTSL server, **not yet against a live Pro Tools session**.
 
-Pro Tools comes first: its scripting API (PTSL) can write and read pan breakpoints.
+### Also in the box
+
+- **Bed mode:** Panner renders the movement itself, from mono or stereo into stereo, 5.1, 7.1, 5.1.2, 5.1.4, 7.1.2, 7.1.4, 7.1.6 or 9.1.6. This works in any DAW.
+- **Positioning:** room-style X / Y / Z with Size, Stereo Width and Gain.
+- **Sequencer:** up to 16 steps at tempo-synced rates (straight, triplet, dotted), with Glide between steps. Everything follows the host timeline, so offline bounces match realtime playback.
 
 ## Building
 

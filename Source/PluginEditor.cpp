@@ -8,6 +8,8 @@ namespace colours
     const juce::Colour speaker    { 0xff8a8d99 };
     const juce::Colour text       { 0xffd8d9de };
     const juce::Colour accent     { 0xffff4d2e };
+    const juce::Colour good       { 0xff3ccf6e };
+    const juce::Colour warning    { 0xffffb020 };
 }
 
 //==============================================================================
@@ -172,9 +174,71 @@ PannerEditor::PannerEditor (PannerProcessor& p)
         addAndMakeVisible (b);
     }
 
+    renderBox.addItemList (proc.apvts.getParameter ("renderMode")->getAllValueStrings(), 1);
+    addAndMakeVisible (renderBox);
+    renderAttachment = std::make_unique<juce::AudioProcessorValueTreeState::ComboBoxAttachment> (proc.apvts, "renderMode", renderBox);
+
+    bridgeStatus.setFont (juce::FontOptions (14.0f, juce::Font::bold));
+    bridgeStatus.setMinimumHorizontalScale (0.6f);
+    addAndMakeVisible (bridgeStatus);
+
+    pushButton.onClick = [this] { proc.pushToProTools(); };
+    addAndMakeVisible (pushButton);
+
+    // Added last so it sits over everything and takes every click while it's up.
+    driftPrompt.onPush = [this] { proc.pushToProTools(); };
+    driftPrompt.onRevert = [this] { proc.revertToLastPush(); };
+    driftPrompt.onUnlink = [this] { proc.unlinkFromProTools(); };
+    addChildComponent (driftPrompt);
+
     selectTarget (-1);
-    setSize (780, 520);
+    setSize (780, 566);
     startTimerHz (30);
+
+    proc.bridge.addChangeListener (this);
+    refreshBridgeStatus();
+    proc.editorOpenedOrClosed();
+}
+
+PannerEditor::~PannerEditor()
+{
+    proc.bridge.removeChangeListener (this);
+    proc.editorOpenedOrClosed();
+}
+
+void PannerEditor::refreshBridgeStatus()
+{
+    using Status = ProToolsBridge::Status;
+    const auto report = proc.bridge.getReport();
+
+    juce::Colour colour = colours::speaker;
+    juce::String text;
+
+    switch (report.status)
+    {
+        case Status::notLinked:  text = "NOT PUSHED. " + report.message; break;
+        case Status::busy:       text = report.message; colour = colours::text; break;
+        case Status::inSync:     text = "IN SYNC. " + report.message; colour = colours::good; break;
+        case Status::drifted:    text = "DRIFT. " + report.message; colour = colours::accent; break;
+        case Status::cantVerify: text = "CAN'T VERIFY. " + report.message; colour = colours::warning; break;
+    }
+
+    if (report.pushError.isNotEmpty())
+    {
+        text = report.pushError + "  |  " + text;
+        colour = colours::warning;
+    }
+
+    bridgeStatus.setText (text, juce::dontSendNotification);
+    bridgeStatus.setTooltip (text);
+    bridgeStatus.setColour (juce::Label::textColourId, colour);
+    pushButton.setEnabled (report.status != Status::busy);
+
+    driftPrompt.setReport (report);
+    driftPrompt.setVisible (report.needsAnswer());
+
+    if (driftPrompt.isVisible())
+        driftPrompt.toFront (true);
 }
 
 void PannerEditor::setUpSlider (juce::Slider& s, juce::Label& l, const juce::String& text, juce::Slider::SliderStyle style)
@@ -224,7 +288,17 @@ void PannerEditor::paint (juce::Graphics& g)
 
 void PannerEditor::resized()
 {
+    driftPrompt.setBounds (getLocalBounds());
+
     auto r = getLocalBounds().reduced (12);
+
+    auto bridgeRow = r.removeFromTop (32);
+    renderBox.setBounds (bridgeRow.removeFromLeft (190));
+    pushButton.setBounds (bridgeRow.removeFromRight (170));
+    bridgeRow.removeFromLeft (8);
+    bridgeRow.removeFromRight (8);
+    bridgeStatus.setBounds (bridgeRow);
+    r.removeFromTop (14);
 
     auto stepRow = r.removeFromBottom (32);
     r.removeFromBottom (10);
