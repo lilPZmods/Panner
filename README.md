@@ -1,6 +1,6 @@
 # Panner
 
-**by Anti-Music.** Free and open source. Amazing shit should be free.
+**by Anti-Music.** Free and open source.
 
 Panner is a sequenced, tempo-synced Atmos panner (AAX / VST3 / AU) built to close the gap the Dolby Atmos Music Panner leaves open: programmed movement that you can print with an **offline bounce**, without sitting through a real-time pass into the Dolby Renderer.
 
